@@ -14,6 +14,14 @@ const rssParser = new Parser();
 const REQUEST_TIMEOUT_MS = 10000; // per source -- keep tight so one slow
                                     // feed doesn't stall the whole run
 
+const BROWSER_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+// GNews's free tier caps requests at 1/second; this needs to stay above that
+// or every query after the first in a topic gets rejected with HTTP 429.
+const GNEWS_MIN_INTERVAL_MS = 1100;
+const GNEWS_MAX_RETRIES = 2;
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -28,10 +36,17 @@ async function fetchWithTimeout(url, options = {}) {
   }
 }
 
+// Some feeds (e.g. citinewsroom.com) ship raw, unescaped "&" characters in
+// entry text, which breaks strict XML entity parsing. Escape any "&" that
+// isn't already part of a valid entity before handing the XML to the parser.
+function sanitizeXmlEntities(xml) {
+  return xml.replace(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-fA-F]+;)/g, '&amp;');
+}
+
 export async function fetchRss(url) {
   try {
     const resp = await fetchWithTimeout(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (personal news digest bot)' },
+      headers: { 'User-Agent': BROWSER_USER_AGENT },
     });
     if (!resp.ok) {
       console.warn(`Failed to fetch RSS feed ${url}: HTTP ${resp.status}`);
@@ -39,7 +54,7 @@ export async function fetchRss(url) {
     }
 
     const xml = await resp.text();
-    const feed = await rssParser.parseString(xml);
+    const feed = await rssParser.parseString(sanitizeXmlEntities(xml));
     const sourceName = feed.title || url;
 
     const articles = (feed.items || []).slice(0, 15).map((item) => ({
@@ -60,7 +75,7 @@ export async function fetchRss(url) {
   }
 }
 
-export async function fetchGNews(query) {
+export async function fetchGNews(query, attempt = 0) {
   if (!config.GNEWS_API_KEY) {
     console.warn(`GNEWS_API_KEY not set -- skipping GNews query: ${query}`);
     return [];
@@ -74,6 +89,14 @@ export async function fetchGNews(query) {
       apikey: config.GNEWS_API_KEY,
     });
     const resp = await fetchWithTimeout(`https://gnews.io/api/v4/search?${params.toString()}`);
+
+    if (resp.status === 429 && attempt < GNEWS_MAX_RETRIES) {
+      const retryAfterSec = Number(resp.headers.get('retry-after')) || (attempt + 1) * 2;
+      console.warn(`GNews rate-limited on query '${query}', retrying in ${retryAfterSec}s...`);
+      await sleep(retryAfterSec * 1000);
+      return fetchGNews(query, attempt + 1);
+    }
+
     if (!resp.ok) {
       console.warn(`Failed GNews query '${query}': HTTP ${resp.status}`);
       return [];
@@ -131,7 +154,7 @@ export async function fetchTopic(topicKey, topicConfig) {
 
   for (const query of topicConfig.gnewsQueries || []) {
     articles = articles.concat(await fetchGNews(query));
-    await sleep(300);
+    await sleep(GNEWS_MIN_INTERVAL_MS);
   }
 
   if (topicConfig.includeWeatherAlerts) {

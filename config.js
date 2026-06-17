@@ -49,7 +49,7 @@ export const TOPICS = {
       'https://www.espn.com/espn/rss/mlb/news',
       'https://www.espn.com/espn/rss/soccer/news',
       'http://feeds.bbci.co.uk/sport/football/rss.xml',
-      'https://worldathletics.org/rss/news',
+      'https://feeds.bbci.co.uk/sport/athletics/rss.xml',
     ],
     gnewsQueries: ['Washington Commanders', 'Atlanta Braves', 'Atlanta United'],
     maxItems: 8,
@@ -81,7 +81,8 @@ export const TOPICS = {
   localAtlanta: {
     label: 'Local: Atlanta metro / Gwinnett County',
     rss: [
-      'https://www.ajc.com/arc/outboundfeeds/rss/',
+      // ajc.com killed their public RSS feed (404s as of June 2026) -- GNews
+      // queries below cover Atlanta metro/Gwinnett in its place.
       'https://www.11alive.com/feeds/syndication/rss/news/local',
       'https://www.capitalbnews.org/feed/',
     ],
