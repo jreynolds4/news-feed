@@ -31,7 +31,7 @@ Write 3-4 sentences in plain language, with no unexplained jargon. Do not use bu
 
   try {
     const response = await client.messages.create({
-      model: config.CLAUDE_MODEL,
+      model: config.CLAUDE_EXPLAINER_MODEL,
       max_tokens: 400,
       messages: [{ role: 'user', content: prompt }],
     });

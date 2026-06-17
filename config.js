@@ -26,8 +26,14 @@ export const RESEND_API_KEY = process.env.RESEND_API_KEY;
 export const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL;          // where the digest goes (Gmail address)
 export const SENDER_EMAIL = process.env.SENDER_EMAIL || 'digest@yourdomain.com'; // must be verified in Resend
 
-// Claude model used for filtering/ranking/summarizing
+// Claude model used for filtering/ranking/summarizing -- this step does real
+// judgment (dedup, relevance, ranking, neutral summarization), so it stays
+// on a stronger model rather than the cheaper one used for the explainer.
 export const CLAUDE_MODEL = 'claude-sonnet-4-6';
+
+// Cheaper model for the soccer explainer -- a templated, low-stakes writing
+// task that doesn't need Sonnet-level judgment.
+export const CLAUDE_EXPLAINER_MODEL = 'claude-haiku-4-5';
 
 // ---------------------------------------------------------------------------
 // Local context (used for the weather alert lookup)

@@ -50,11 +50,13 @@ export async function curateTopic(topicKey, topicConfig, rawArticles) {
   }
 
   // Trim fields and cap article count sent so the prompt/token usage stays sane.
-  const trimmed = rawArticles.slice(0, 60).map((a) => ({
+  // Sources are already roughly relevance/recency-ordered, so the tail past
+  // 40 contributes little to curation, which selects only maxItems anyway.
+  const trimmed = rawArticles.slice(0, 40).map((a) => ({
     title: a.title,
     url: a.url,
     source: a.source,
-    summary: (a.summary || '').slice(0, 300),
+    summary: (a.summary || '').slice(0, 200),
   }));
 
   const prompt = buildPrompt(
@@ -67,7 +69,7 @@ export async function curateTopic(topicKey, topicConfig, rawArticles) {
   try {
     const response = await client.messages.create({
       model: config.CLAUDE_MODEL,
-      max_tokens: 2000,
+      max_tokens: 1200,
       messages: [{ role: 'user', content: prompt }],
     });
 
