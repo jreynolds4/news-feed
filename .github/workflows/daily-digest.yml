@@ -1,0 +1,35 @@
+name: Daily News Digest
+
+on:
+  schedule:
+    # 11:00 UTC = 7:00 AM Eastern (Standard Time). During Eastern Daylight
+    # Time this will run at 7:00 AM as well only if you change to 10:00 UTC --
+    # GitHub Actions cron does not auto-adjust for DST. Update the cron line
+    # twice a year, or accept a 1-hour drift, whichever you'd rather deal with.
+    - cron: "0 11 * * *"
+  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run digest
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GNEWS_API_KEY: ${{ secrets.GNEWS_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        run: python main.py
