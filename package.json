@@ -1,7 +1,7 @@
 {
   "name": "news-digest",
   "version": "1.0.0",
-  "description": "Personal daily news digest -- fetch from RSS/GNews, curate with Claude, email via Resend.",
+  "description": "Personal daily news digest -- fetch from RSS/GNews, curate with Gemini, email via Resend.",
   "type": "module",
   "main": "main.js",
   "scripts": {
@@ -9,10 +9,10 @@
     "dry-run": "node main.js --dry-run --save-html preview.html"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.0",
+    "@google/genai": "^2.8.0",
     "rss-parser": "^3.13.0",
     "dotenv": "^16.4.5"
   }

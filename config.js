@@ -19,21 +19,17 @@ import 'dotenv/config';
 // API keys / secrets (set as environment variables -- see .env.example and
 // README.md. Never hardcode real keys in this file.)
 // ---------------------------------------------------------------------------
-export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+export const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 export const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
 export const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 export const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL;          // where the digest goes (Gmail address)
 export const SENDER_EMAIL = process.env.SENDER_EMAIL || 'digest@yourdomain.com'; // must be verified in Resend
 
-// Claude model used for filtering/ranking/summarizing -- this step does real
-// judgment (dedup, relevance, ranking, neutral summarization), so it stays
-// on a stronger model rather than the cheaper one used for the explainer.
-export const CLAUDE_MODEL = 'claude-sonnet-4-6';
-
-// Cheaper model for the soccer explainer -- a templated, low-stakes writing
-// task that doesn't need Sonnet-level judgment.
-export const CLAUDE_EXPLAINER_MODEL = 'claude-haiku-4-5';
+// Gemini model used for both curation (filtering/ranking/summarizing) and the
+// soccer explainer -- top-tier model for both, since quality is prioritized
+// over cost here.
+export const GEMINI_MODEL = 'gemini-3.1-pro-preview';
 
 // ---------------------------------------------------------------------------
 // Local context (used for the weather alert lookup)
@@ -49,6 +45,7 @@ export const TOPICS = {
 
   sports: {
     label: 'Sports: NBA, NFL (Commanders), MLB (Braves), MLS (Atlanta United), Track & Field, International Soccer',
+    emoji: '🏆',
     rss: [
       'https://www.espn.com/espn/rss/nba/news',
       'https://www.espn.com/espn/rss/nfl/news',
@@ -64,6 +61,7 @@ export const TOPICS = {
 
   technology: {
     label: 'Technology: AI/ML trends & research, new releases, top tech news',
+    emoji: '💻',
     rss: [
       'https://techcrunch.com/feed/',
       'https://www.theverge.com/rss/index.xml',
@@ -76,6 +74,7 @@ export const TOPICS = {
 
   finance: {
     label: 'Finance: stock market state, geopolitical market impact, sentiment, crypto',
+    emoji: '📈',
     rss: [
       'https://www.marketwatch.com/rss/topstories',
       'https://www.coindesk.com/arc/outboundfeeds/rss/',
@@ -86,6 +85,7 @@ export const TOPICS = {
 
   localAtlanta: {
     label: 'Local: Atlanta metro / Gwinnett County',
+    emoji: '📍',
     rss: [
       // ajc.com killed their public RSS feed (404s as of June 2026) -- GNews
       // queries below cover Atlanta metro/Gwinnett in its place.
@@ -99,6 +99,7 @@ export const TOPICS = {
 
   blackAmerica: {
     label: 'National Black America News',
+    emoji: '✊🏾',
     rss: [
       'https://thegrio.com/feed/',
       'https://afro.com/feed/',
@@ -110,6 +111,7 @@ export const TOPICS = {
 
   ghana: {
     label: 'Ghana News',
+    emoji: '🇬🇭',
     rss: [
       'https://www.myjoyonline.com/feed/',
       'https://www.modernghana.com/rssfeed/',
@@ -121,6 +123,7 @@ export const TOPICS = {
 
   world: {
     label: 'World news (broader international events, non-market, non-Ghana)',
+    emoji: '🌍',
     rss: [
       'http://feeds.bbci.co.uk/news/world/rss.xml',
       'https://www.aljazeera.com/xml/rss/all.xml',
@@ -132,6 +135,7 @@ export const TOPICS = {
 
   health: {
     label: 'Health & public health news',
+    emoji: '🏥',
     rss: [
       'https://tools.cdc.gov/api/v2/resources/media/132608.rss',
       'https://www.statnews.com/feed/',
@@ -143,6 +147,7 @@ export const TOPICS = {
 
   federalGov: {
     label: 'Federal Government: 24hr roundup, Supreme Court, Congress/legislation, Elections',
+    emoji: '🏛️',
     rss: [
       'https://www.scotusblog.com/feed/',
       'https://thehill.com/homenews/feed/',

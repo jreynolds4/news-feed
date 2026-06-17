@@ -1,7 +1,7 @@
 # Personal Daily News Digest (Node.js)
 
 A scheduled system that fetches news from RSS feeds and the GNews API,
-curates and summarizes it with Claude based on your topics, and emails
+curates and summarizes it with Gemini based on your topics, and emails
 you a single daily digest, optimized for Gmail. Runs entirely on free
 tiers via GitHub Actions -- no server to maintain.
 
@@ -10,14 +10,14 @@ tiers via GitHub Actions -- no server to maintain.
 1. **Fetch** (`fetch.js`) -- pulls raw articles from RSS feeds and GNews
    API queries for each topic in `config.js`, plus live weather alerts
    for Gwinnett County from the National Weather Service.
-2. **Curate** (`curate.js`) -- sends each topic's raw articles to Claude,
+2. **Curate** (`curate.js`) -- sends each topic's raw articles to Gemini,
    which dedupes overlapping coverage, drops low-quality items, ranks by
    relevance, and writes short neutral summaries.
 3. **Explain** (`explainer.js`) -- generates a short rotating "Soccer 101"
    explainer each day, separate from the news, since the goal there is
    learning the sport, not just reading match reports.
-4. **Compile** (`digest.js`) -- builds a single newspaper-styled HTML
-   email from the curated stories and the day's explainer, tuned for
+4. **Compile** (`digest.js`) -- builds a single dark-themed "daily brief"
+   HTML email from the curated stories and the day's explainer, tuned for
    Gmail's rendering rules (see below).
 5. **Send** (`sendEmail.js`) -- delivers it via Resend.
 6. **Schedule** (`.github/workflows/daily-digest.yml`) -- GitHub Actions
@@ -45,9 +45,9 @@ render it, which simplifies things:
 
 ### 1. Get your API keys (all have free tiers)
 
-- **Anthropic API key**: console.anthropic.com -> Settings -> API Keys.
-  This is pay-as-you-go (separate from a claude.ai subscription); a
-  digest run costs roughly a few cents/day in API usage at this scale.
+- **Gemini API key**: aistudio.google.com/apikey -> create an API key.
+  This is pay-as-you-go; a digest run costs roughly a few cents/day in
+  API usage at this scale.
 - **GNews API key**: gnews.io -> sign up -> free tier gives 100
   requests/day, enough for this digest's ~9 queries/day with room to spare.
 - **Resend API key**: resend.com -> sign up -> API Keys. Free tier covers
@@ -63,7 +63,7 @@ Create a new **private** repo and add these files.
 ### 3. Add your secrets
 
 In your repo: Settings -> Secrets and variables -> Actions -> New repository secret.
-Add each of: `ANTHROPIC_API_KEY`, `GNEWS_API_KEY`, `RESEND_API_KEY`,
+Add each of: `GEMINI_API_KEY`, `GNEWS_API_KEY`, `RESEND_API_KEY`,
 `RECIPIENT_EMAIL`, `SENDER_EMAIL`.
 
 ### 4. Customize your topics and sources
@@ -105,11 +105,11 @@ any time from the repo's Actions tab ("Run workflow").
 
 ## Costs at this scale
 
-Running daily: Claude API usage (~9 topic-curation calls + 1 explainer
-call/day, each a few thousand tokens) typically lands in the
-few-cents-to-low-dollars/month range; GNews and Resend free tiers fully
-cover this volume; GitHub Actions is free for scheduled jobs on a
-private repo within the free minutes allotment.
+Running daily: Gemini API usage (~9 topic-curation calls + 1 explainer
+call/day, each a few thousand tokens, on the top-tier Gemini model)
+typically lands in the few-dollars/month range; GNews and Resend free
+tiers fully cover this volume; GitHub Actions is free for scheduled jobs
+on a private repo within the free minutes allotment.
 
 ## Extending this later
 

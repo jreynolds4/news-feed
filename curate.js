@@ -1,14 +1,29 @@
 // curate.js
 //
-// Uses the Claude API to turn a pile of raw articles into a small set of
+// Uses the Gemini API to turn a pile of raw articles into a small set of
 // ranked, deduplicated, summarized stories per topic. This is the
 // "personalization" layer -- it judges relevance and quality, not just
 // keyword-matches headlines.
 
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI, Type } from '@google/genai';
 import * as config from './config.js';
 
-const client = new Anthropic({ apiKey: config.ANTHROPIC_API_KEY });
+const client = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
+
+const STORY_LIST_SCHEMA = {
+  type: Type.ARRAY,
+  items: {
+    type: Type.OBJECT,
+    properties: {
+      title: { type: Type.STRING },
+      url: { type: Type.STRING },
+      source: { type: Type.STRING },
+      summary: { type: Type.STRING },
+    },
+    required: ['title', 'url', 'source', 'summary'],
+    propertyOrdering: ['title', 'url', 'source', 'summary'],
+  },
+};
 
 function buildPrompt(label, maxItems, preferredOutlets, articlesJson) {
   return `You are curating one section of a personal daily news digest.
@@ -27,7 +42,7 @@ Below is a list of raw articles (some may be duplicates covering the same story 
 Raw articles (JSON):
 ${articlesJson}
 
-Respond with ONLY a JSON array, no other text, no markdown code fences. Each element:
+Respond with a JSON array. Each element:
 {"title": "...", "url": "...", "source": "...", "summary": "your 2-3 sentence neutral summary"}
 
 If none of the raw articles are usable, respond with an empty JSON array: []
@@ -49,14 +64,11 @@ export async function curateTopic(topicKey, topicConfig, rawArticles) {
     return [];
   }
 
-  // Trim fields and cap article count sent so the prompt/token usage stays sane.
-  // Sources are already roughly relevance/recency-ordered, so the tail past
-  // 40 contributes little to curation, which selects only maxItems anyway.
-  const trimmed = rawArticles.slice(0, 40).map((a) => ({
+  const trimmed = rawArticles.map((a) => ({
     title: a.title,
     url: a.url,
     source: a.source,
-    summary: (a.summary || '').slice(0, 200),
+    summary: a.summary || '',
   }));
 
   const prompt = buildPrompt(
@@ -67,17 +79,21 @@ export async function curateTopic(topicKey, topicConfig, rawArticles) {
   );
 
   try {
-    const response = await client.messages.create({
-      model: config.CLAUDE_MODEL,
-      max_tokens: 1200,
-      messages: [{ role: 'user', content: prompt }],
+    const response = await client.models.generateContent({
+      model: config.GEMINI_MODEL,
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: STORY_LIST_SCHEMA,
+        maxOutputTokens: 8192,
+        thinkingConfig: { thinkingLevel: 'HIGH' },
+      },
     });
 
-    const rawText = response.content[0].text;
-    const curated = JSON.parse(stripCodeFences(rawText));
+    const curated = JSON.parse(stripCodeFences(response.text));
 
     if (!Array.isArray(curated)) {
-      console.error(`Topic '${topicKey}': Claude response was not a list, skipping`);
+      console.error(`Topic '${topicKey}': Gemini response was not a list, skipping`);
       return [];
     }
 
