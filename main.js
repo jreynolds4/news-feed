@@ -19,7 +19,7 @@ import { generateSoccerExplainer } from './explainer.js';
 
 function checkRequiredConfig() {
   const missing = [];
-  if (!config.ANTHROPIC_API_KEY) missing.push('ANTHROPIC_API_KEY');
+  if (!config.GEMINI_API_KEY) missing.push('GEMINI_API_KEY');
   if (!config.GNEWS_API_KEY) missing.push('GNEWS_API_KEY');
   if (!config.RESEND_API_KEY) missing.push('RESEND_API_KEY');
   if (!config.RECIPIENT_EMAIL) missing.push('RECIPIENT_EMAIL');
@@ -53,7 +53,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('Step 2/4: curating with Claude (filter, dedupe, rank, summarize)...');
+  console.log('Step 2/4: curating with Gemini (filter, dedupe, rank, summarize)...');
   const curatedByTopic = await curate.curateAll(rawByTopic);
   const totalCurated = Object.values(curatedByTopic).reduce((sum, arr) => sum + arr.length, 0);
   console.log(`Curated down to ${totalCurated} total stories`);

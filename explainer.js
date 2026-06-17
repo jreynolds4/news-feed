@@ -6,10 +6,10 @@
 // per day (by day-of-year) so it cycles through config.SOCCER_EXPLAINER_TOPICS
 // without needing any persisted state between runs.
 
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI } from '@google/genai';
 import * as config from './config.js';
 
-const client = new Anthropic({ apiKey: config.ANTHROPIC_API_KEY });
+const client = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
 
 function dayOfYear(date = new Date()) {
   const start = new Date(date.getFullYear(), 0, 0);
@@ -30,12 +30,15 @@ Explain: ${topic}
 Write 3-4 sentences in plain language, with no unexplained jargon. Do not use bullet points or headers. This will appear as a small "Soccer 101" feature inside a daily news email, so keep it self-contained and skimmable.`;
 
   try {
-    const response = await client.messages.create({
-      model: config.CLAUDE_EXPLAINER_MODEL,
-      max_tokens: 400,
-      messages: [{ role: 'user', content: prompt }],
+    const response = await client.models.generateContent({
+      model: config.GEMINI_MODEL,
+      contents: prompt,
+      config: {
+        maxOutputTokens: 1024,
+        thinkingConfig: { thinkingLevel: 'HIGH' },
+      },
     });
-    return { topic, text: response.content[0].text.trim() };
+    return { topic, text: response.text.trim() };
   } catch (err) {
     console.error(`Soccer explainer generation failed: ${err.message}`);
     return null;
