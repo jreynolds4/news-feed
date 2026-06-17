@@ -14,8 +14,13 @@ const rssParser = new Parser();
 const REQUEST_TIMEOUT_MS = 10000; // per source -- keep tight so one slow
                                     // feed doesn't stall the whole run
 
-const BROWSER_USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+// A UA that honestly identifies as a feed bot, rather than spoofing a full
+// browser: ESPN's CDN (and others) serve a JS challenge page instead of the
+// feed XML to UAs that claim to be a browser but don't behave like one,
+// which broke parsing for every ESPN feed when this was tried as a fix for
+// WAF blocks elsewhere -- it didn't even help with those (modernghana.com
+// still 403s either way), so it's not worth the regression.
+const RSS_USER_AGENT = 'Mozilla/5.0 (personal news digest bot)';
 
 // GNews's free tier caps requests at 1/second; this needs to stay above that
 // or every query after the first in a topic gets rejected with HTTP 429.
@@ -36,17 +41,30 @@ async function fetchWithTimeout(url, options = {}) {
   }
 }
 
-// Some feeds (e.g. citinewsroom.com) ship raw, unescaped "&" characters in
-// entry text, which breaks strict XML entity parsing. Escape any "&" that
-// isn't already part of a valid entity before handing the XML to the parser.
+// Some feeds (e.g. citinewsroom.com) ship raw, unescaped "&" and "<"
+// characters in entry text -- common when a WordPress feed doesn't wrap
+// body HTML in CDATA. Escape both before handing the XML to the parser
+// rather than letting strict XML parsing reject the whole feed.
+//
+// CDATA sections are left untouched: their content is already exempt from
+// entity parsing, so running the same escaping over raw "&"/"<" inside one
+// would corrupt legitimate text (e.g. "AT&T" becoming "AT&amp;T").
 function sanitizeXmlEntities(xml) {
-  return xml.replace(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-fA-F]+;)/g, '&amp;');
+  return xml
+    .split(/(<!\[CDATA\[[\s\S]*?\]\]>)/)
+    .map((part) => {
+      if (part.startsWith('<![CDATA[')) return part;
+      return part
+        .replace(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-fA-F]+;)/g, '&amp;')
+        .replace(/<(?![a-zA-Z/!?])/g, '&lt;');
+    })
+    .join('');
 }
 
 export async function fetchRss(url) {
   try {
     const resp = await fetchWithTimeout(url, {
-      headers: { 'User-Agent': BROWSER_USER_AGENT },
+      headers: { 'User-Agent': RSS_USER_AGENT },
     });
     if (!resp.ok) {
       console.warn(`Failed to fetch RSS feed ${url}: HTTP ${resp.status}`);
