@@ -93,12 +93,16 @@ const HTML_HEAD = `<!DOCTYPE html>
 
   /* ---------- ticker ---------- */
   .ticker {
+    position: relative;
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     background: var(--bg-raise);
-    overflow: hidden;
+    overflow-x: auto;
     white-space: nowrap;
     padding: 9px 0;
+    -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 92%, transparent 100%);
   }
   .ticker-track {
     display: inline-block;
@@ -108,6 +112,7 @@ const HTML_HEAD = `<!DOCTYPE html>
     color: var(--text-muted);
     padding-left: 22px;
   }
+  .ticker-link { color: inherit; text-decoration: none; }
 
   /* ---------- signature stat card ---------- */
   .brief-card {
@@ -149,7 +154,7 @@ const HTML_HEAD = `<!DOCTYPE html>
   }
   .brief-chart { margin-left: auto; }
   .bar { fill: var(--lime); opacity: 0.85; }
-  .bar-label { font-size: 11px; text-anchor: middle; }
+  .bar-label { font-size: 13px; text-anchor: middle; }
 
   /* ---------- sections ---------- */
   .section { padding: 0 22px; margin-top: 38px; }
@@ -174,7 +179,7 @@ const HTML_HEAD = `<!DOCTYPE html>
   .sec-count {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10.5px;
-    color: var(--text-faint);
+    color: var(--text-muted);
     letter-spacing: 0.5px;
     white-space: nowrap;
   }
@@ -206,14 +211,14 @@ const HTML_HEAD = `<!DOCTYPE html>
     padding: 14px 0 14px 14px;
     font-size: 14px;
     font-style: italic;
-    color: var(--text-faint);
+    color: var(--text-muted);
   }
 
   /* ---------- story ---------- */
   .story {
     padding: 14px 0 14px 14px;
-    margin-bottom: 4px;
-    border-left: 2px solid var(--border-soft);
+    margin-bottom: 14px;
+    border-left: 2px solid var(--border);
   }
   .story-title {
     font-family: 'Inter', sans-serif;
@@ -222,13 +227,15 @@ const HTML_HEAD = `<!DOCTYPE html>
     line-height: 1.35;
     color: var(--text);
     text-decoration: none;
+    max-width: 600px;
+    display: block;
   }
   .story-meta { margin: 6px 0 8px 0; }
   .source-tag {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     letter-spacing: 0.5px;
-    color: var(--text-faint);
+    color: var(--text-muted);
     background: var(--bg-raise-2);
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -239,6 +246,7 @@ const HTML_HEAD = `<!DOCTYPE html>
     line-height: 1.55;
     color: var(--text-muted);
     margin: 0;
+    max-width: 600px;
   }
 
   /* ---------- footer ---------- */
@@ -248,7 +256,7 @@ const HTML_HEAD = `<!DOCTYPE html>
     border-top: 1px solid var(--border);
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
-    color: var(--text-faint);
+    color: var(--text-muted);
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
@@ -346,7 +354,7 @@ function renderTicker(curatedByTopic) {
     const count = (curatedByTopic[topicKey] || []).length;
     const shortLabel = escapeHtml(topicConfig.label.split(':')[0].toUpperCase());
     const paddedCount = String(count).padStart(2, '0');
-    return `${topicConfig.emoji} ${shortLabel} ${paddedCount}`;
+    return `<a class="ticker-link" href="#${topicKey}">${topicConfig.emoji} ${shortLabel} ${paddedCount}</a>`;
   });
   return `
   <div class="ticker"><div class="ticker-track">${entries.join('&nbsp;&middot;&nbsp;')}</div></div>`;
@@ -354,7 +362,7 @@ function renderTicker(curatedByTopic) {
 
 function renderBriefChart(counts, topicConfigs) {
   const barWidth = 18;
-  const xStep = 28;
+  const xStep = 30;
   const baselineY = 46;
   const maxHeight = 46;
   const max = Math.max(1, ...counts);
