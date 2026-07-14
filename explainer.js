@@ -34,8 +34,8 @@ Write 3-4 sentences in plain language, with no unexplained jargon. Do not use bu
       model: config.GEMINI_MODEL,
       contents: prompt,
       config: {
-        maxOutputTokens: 1024,
-        thinkingConfig: { thinkingLevel: 'HIGH' },
+        maxOutputTokens: 8192,
+        thinkingConfig: { thinkingLevel: 'LOW' },
       },
     });
     return { topic, text: response.text.trim() };

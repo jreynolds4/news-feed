@@ -51,6 +51,8 @@ const HTML_HEAD = `<!DOCTYPE html>
     color: var(--text);
     font-family: 'Inter', -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
   .container {
@@ -147,7 +149,7 @@ const HTML_HEAD = `<!DOCTYPE html>
     text-transform: uppercase;
     margin-top: 5px;
   }
-  .brief-chart { margin-left: auto; }
+  .brief-chart { margin-left: auto; overflow-x: auto; }
   .bar { fill: var(--lime); opacity: 0.85; }
   .bar-label { font-size: 11px; text-anchor: middle; }
 
@@ -257,13 +259,21 @@ const HTML_HEAD = `<!DOCTYPE html>
   .footer .prompt { color: var(--lime-dim); }
 
   @media (max-width: 520px) {
-    .masthead { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .masthead { flex-direction: column; align-items: flex-start; gap: 10px; padding: 20px 14px 14px; }
     .masthead .status { text-align: left; }
-    .masthead .brand h1 { font-size: 27px; }
-    .brief-stats { gap: 20px; }
-    .brief-chart { margin-left: 0; margin-top: 14px; }
-    .stat .num { font-size: 27px; }
+    .masthead .brand h1 { font-size: 26px; }
+    .brief-card { margin: 16px 14px 8px; padding: 16px 14px 14px; }
+    .brief-stats { gap: 18px; }
+    .stat .num { font-size: 26px; }
+    .brief-chart { margin-left: 0; margin-top: 14px; width: 100%; }
+    .section { padding: 0 14px; }
+    .container { padding-bottom: 36px; }
+    .explainer { padding: 12px 14px; }
+    .explainer p { font-size: 14.5px; line-height: 1.65; }
+    .story { padding: 12px 0 12px 10px; }
     .story-title { font-size: 15px; }
+    .story-summary { font-size: 13.5px; }
+    .footer { margin: 28px 14px 0; flex-direction: column; gap: 4px; }
   }
 </style>
 </head>
